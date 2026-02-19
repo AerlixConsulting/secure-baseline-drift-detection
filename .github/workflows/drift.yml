@@ -1,0 +1,26 @@
+name: Drift Reporting
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10 * * 1" # weekly Monday 10:00 UTC
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate drift report
+        run: |
+          python tools/drift_report.py --host ci-runner --finding "Firewall disabled" --severity High
+
+      - name: Generate verification record
+        run: |
+          python tools/verify_fix.py --finding "Firewall disabled" --verifier "Security Officer"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-artifacts
+          path: generated/
