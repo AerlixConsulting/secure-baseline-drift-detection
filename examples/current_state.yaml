@@ -1,0 +1,99 @@
+# Current state configuration for webserver-prod-01
+# This file represents the live system configuration as would be gathered by
+# a configuration management agent (e.g., Ansible facts, CIS-CAT output, etc.)
+# Last gathered: 2024-03-15T10:00:00Z
+
+os:
+  hostname: webserver-prod-01
+  os_version: "Ubuntu 22.04.3 LTS"
+  kernel_version: "5.15.0-91-generic"
+  last_patched: "2024-03-01"
+
+  ssh:
+    permit_root_login: "yes"         # DRIFT: was "no" in baseline
+    password_authentication: "no"
+    pubkey_authentication: "yes"
+    max_auth_tries: 3
+    allow_tcp_forwarding: "no"
+    x11_forwarding: "no"
+    login_grace_time: 60
+    client_alive_interval: 300
+    client_alive_count_max: 3
+    protocol: 2
+    host_based_authentication: "no"
+    ignore_rhosts: "yes"
+
+  firewall:
+    enabled: true
+    default_policy: "deny"
+    provider: "ufw"
+    rules:
+      - proto: tcp
+        port: 443
+        action: allow
+        from: "0.0.0.0/0"
+      - proto: tcp
+        port: 22
+        action: allow
+        from: "10.0.0.0/8"
+      - proto: tcp
+        port: 80
+        action: allow
+        from: "0.0.0.0/0"
+
+  audit:
+    syscall: "enabled"
+    file_access: "enabled"
+    network: "enabled"
+    process_execution: "disabled"   # DRIFT: was "enabled" in baseline
+
+  sysctl:
+    net.ipv4.ip_forward: 0
+    net.ipv4.conf.all.accept_redirects: 0
+    net.ipv4.conf.all.send_redirects: 0
+    net.ipv4.tcp_syncookies: 1
+    kernel.randomize_va_space: 2
+    fs.suid_dumpable: 0
+
+  packages:
+    aide: installed
+    auditd: installed
+    fail2ban: installed
+    apparmor: installed
+    rkhunter: not_installed        # DRIFT: was "installed" in baseline
+
+iam:
+  mfa_required: true
+  password_min_length: 8           # DRIFT: was 14 in baseline
+  password_max_age: 90
+  password_complexity_enabled: true
+  lockout_threshold: 5
+  lockout_duration: 900
+  sudo_log_enabled: true
+  inactive_account_lockout_days: 30
+
+network:
+  tls_version_minimum: "1.2"
+  hsts_enabled: true
+  hsts_max_age: 31536000
+  http_enabled: false
+  https_redirect: true
+  cipher_suites:
+    - "TLS_AES_256_GCM_SHA384"
+    - "TLS_CHACHA20_POLY1305_SHA256"
+    - "TLS_AES_128_GCM_SHA256"
+  dns_servers:
+    - "10.0.0.53"
+    - "10.0.0.54"
+  ntp_servers:
+    - "169.254.169.123"
+
+services:
+  sshd: active
+  ufw: active
+  auditd: active
+  fail2ban: active
+  cron: active
+  cups: active                      # DRIFT: was "inactive" in baseline (unwanted service)
+  avahi-daemon: inactive
+  bluetooth: inactive

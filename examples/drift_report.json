@@ -1,0 +1,63 @@
+{
+  "report_id": "dr-20240315-webserver-prod-01",
+  "system_id": "webserver-prod-01",
+  "baseline_id": "bl-20240301-webserver-prod-01",
+  "generated_at": "2024-03-15T10:00:00+00:00",
+  "summary": {
+    "total_checks": 58,
+    "drifted": 5,
+    "compliant": 53,
+    "critical": 1,
+    "high": 1,
+    "medium": 2,
+    "low": 1,
+    "unknown": 0
+  },
+  "findings": [
+    {
+      "key": "os.ssh.permit_root_login",
+      "drift_type": "changed",
+      "baseline_value": "no",
+      "current_value": "yes",
+      "severity": "critical",
+      "control_refs": ["CM-6", "CM-2", "AC-6"],
+      "remediation": "Set 'PermitRootLogin no' in /etc/ssh/sshd_config and run: sudo systemctl restart sshd"
+    },
+    {
+      "key": "os.audit.process_execution",
+      "drift_type": "changed",
+      "baseline_value": "enabled",
+      "current_value": "disabled",
+      "severity": "medium",
+      "control_refs": ["AU-2", "AU-12", "AU-3"],
+      "remediation": "Enable audit rules for all audit subsystems in /etc/audit/rules.d/. Restart auditd: sudo systemctl restart auditd"
+    },
+    {
+      "key": "os.packages.rkhunter",
+      "drift_type": "changed",
+      "baseline_value": "installed",
+      "current_value": "not_installed",
+      "severity": "low",
+      "control_refs": ["SI-3", "SI-7"],
+      "remediation": "Install rkhunter: sudo apt install rkhunter"
+    },
+    {
+      "key": "iam.password_min_length",
+      "drift_type": "changed",
+      "baseline_value": 14,
+      "current_value": 8,
+      "severity": "high",
+      "control_refs": ["IA-5", "CM-6"],
+      "remediation": "Set PASS_MIN_LEN=14 in /etc/login.defs and configure pam_pwquality.so minlen=14 in /etc/pam.d/common-password"
+    },
+    {
+      "key": "services.cups",
+      "drift_type": "changed",
+      "baseline_value": "inactive",
+      "current_value": "active",
+      "severity": "medium",
+      "control_refs": ["CM-7", "SC-5"],
+      "remediation": "Disable CUPS printing service: sudo systemctl disable cups --now"
+    }
+  ]
+}

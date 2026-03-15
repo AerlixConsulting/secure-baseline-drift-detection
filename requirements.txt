@@ -1,0 +1,2 @@
+# Example requirements for direct pip install without build backend
+pyyaml>=6.0

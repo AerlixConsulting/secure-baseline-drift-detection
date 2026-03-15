@@ -1,0 +1,200 @@
+# Compliance Profile: CIS Ubuntu 22.04 Level 2 (Simplified)
+# Version: 1.0
+# Authority: Center for Internet Security (CIS)
+# Mapped to: NIST 800-53 Rev 5, NIST CSF 1.1, RMF
+
+profile:
+  name: cis-ubuntu-22-04-level2
+  version: "1.0"
+  description: >
+    Simplified CIS Level 2 compliance profile for Ubuntu 22.04 server workloads.
+    Aligned to NIST 800-53 Rev 5 CM, IA, SC, AU, and SI control families.
+  authority: Center for Internet Security
+  reference: https://www.cisecurity.org/cis-benchmarks
+
+rules:
+  # -----------------------------------------------------------------------
+  # SSH Hardening
+  # -----------------------------------------------------------------------
+  - id: SSH-001
+    key: os.ssh.permit_root_login
+    expected: "no"
+    severity: critical
+    controls: [CM-6, CM-2, AC-6]
+    remediation: >
+      Set 'PermitRootLogin no' in /etc/ssh/sshd_config and run:
+      sudo systemctl restart sshd
+
+  - id: SSH-002
+    key: os.ssh.password_authentication
+    expected: "no"
+    severity: high
+    controls: [IA-5, CM-6]
+    remediation: >
+      Set 'PasswordAuthentication no' in /etc/ssh/sshd_config.
+      Ensure all users have SSH key pairs configured before applying.
+
+  - id: SSH-003
+    key: os.ssh.x11_forwarding
+    expected: "no"
+    severity: medium
+    controls: [CM-7, CM-6]
+    remediation: "Set 'X11Forwarding no' in /etc/ssh/sshd_config"
+
+  - id: SSH-004
+    key: os.ssh.max_auth_tries
+    expected: 3
+    severity: medium
+    controls: [AC-7, CM-6]
+    remediation: "Set 'MaxAuthTries 3' in /etc/ssh/sshd_config"
+
+  - id: SSH-005
+    key: os.ssh.allow_tcp_forwarding
+    expected: "no"
+    severity: medium
+    controls: [CM-7, SC-7]
+    remediation: "Set 'AllowTcpForwarding no' in /etc/ssh/sshd_config"
+
+  - id: SSH-006
+    key: os.ssh.host_based_authentication
+    expected: "no"
+    severity: high
+    controls: [CM-6, IA-5]
+    remediation: "Set 'HostbasedAuthentication no' in /etc/ssh/sshd_config"
+
+  # -----------------------------------------------------------------------
+  # Firewall
+  # -----------------------------------------------------------------------
+  - id: FW-001
+    key: os.firewall.enabled
+    expected: true
+    severity: high
+    controls: [CM-7, SC-7, SC-5]
+    remediation: "Enable system firewall: sudo ufw enable"
+
+  - id: FW-002
+    key: os.firewall.default_policy
+    expected: "deny"
+    severity: high
+    controls: [CM-7, SC-7]
+    remediation: "Set default deny policy: sudo ufw default deny incoming"
+
+  # -----------------------------------------------------------------------
+  # Audit Logging
+  # -----------------------------------------------------------------------
+  - id: AUD-001
+    key: os.audit.*
+    expected: "enabled"
+    severity: medium
+    controls: [AU-2, AU-12, AU-3]
+    remediation: >
+      Enable audit rules for all audit subsystems in /etc/audit/rules.d/.
+      Restart auditd: sudo systemctl restart auditd
+
+  # -----------------------------------------------------------------------
+  # Package Management
+  # -----------------------------------------------------------------------
+  - id: PKG-001
+    key: os.packages.aide
+    expected: "installed"
+    severity: medium
+    controls: [SI-7, CM-8]
+    remediation: "Install AIDE: sudo apt install aide && sudo aide --init"
+
+  - id: PKG-002
+    key: os.packages.rkhunter
+    expected: "installed"
+    severity: low
+    controls: [SI-3, SI-7]
+    remediation: "Install rkhunter: sudo apt install rkhunter"
+
+  # -----------------------------------------------------------------------
+  # IAM
+  # -----------------------------------------------------------------------
+  - id: IAM-001
+    key: iam.mfa_required
+    expected: true
+    severity: critical
+    controls: [IA-2, IA-5, AC-3]
+    remediation: >
+      Enable MFA for all user accounts. Configure PAM or identity provider
+      to enforce multi-factor authentication.
+
+  - id: IAM-002
+    key: iam.password_min_length
+    expected: 14
+    severity: high
+    controls: [IA-5, CM-6]
+    remediation: >
+      Set PASS_MIN_LEN=14 in /etc/login.defs and configure
+      pam_pwquality.so minlen=14 in /etc/pam.d/common-password
+
+  - id: IAM-003
+    key: iam.password_max_age
+    expected: 90
+    severity: medium
+    controls: [IA-5]
+    remediation: "Set PASS_MAX_DAYS=90 in /etc/login.defs"
+
+  - id: IAM-004
+    key: iam.lockout_threshold
+    expected: 5
+    severity: medium
+    controls: [AC-7, IA-5]
+    remediation: >
+      Configure pam_tally2 or pam_faillock with deny=5 in
+      /etc/pam.d/common-auth
+
+  # -----------------------------------------------------------------------
+  # Network
+  # -----------------------------------------------------------------------
+  - id: NET-001
+    key: network.tls_version_minimum
+    expected: "1.2"
+    severity: high
+    controls: [SC-8, SC-28, SC-23]
+    remediation: >
+      Configure all TLS listeners to require TLS 1.2 or higher.
+      Disable TLS 1.0 and 1.1 in web server and application configuration.
+
+  - id: NET-002
+    key: network.http_enabled
+    expected: false
+    severity: high
+    controls: [SC-8, CM-7]
+    remediation: >
+      Disable plain HTTP listener. Configure all web traffic to use HTTPS.
+      Enforce HTTPS redirects.
+
+  - id: NET-003
+    key: network.hsts_enabled
+    expected: true
+    severity: medium
+    controls: [SC-8, SC-23]
+    remediation: >
+      Add Strict-Transport-Security header to all HTTPS responses.
+      Recommended: max-age=31536000; includeSubDomains
+
+  # -----------------------------------------------------------------------
+  # Services
+  # -----------------------------------------------------------------------
+  - id: SVC-001
+    key: services.cups
+    expected: "inactive"
+    severity: medium
+    controls: [CM-7, SC-5]
+    remediation: "Disable CUPS printing service: sudo systemctl disable cups --now"
+
+  - id: SVC-002
+    key: services.avahi-daemon
+    expected: "inactive"
+    severity: medium
+    controls: [CM-7]
+    remediation: "Disable Avahi daemon: sudo systemctl disable avahi-daemon --now"
+
+  - id: SVC-003
+    key: services.bluetooth
+    expected: "inactive"
+    severity: low
+    controls: [CM-7]
+    remediation: "Disable Bluetooth service: sudo systemctl disable bluetooth --now"
